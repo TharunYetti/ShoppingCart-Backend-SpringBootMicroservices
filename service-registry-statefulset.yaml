@@ -1,0 +1,51 @@
+# stateful set for making pods with unique names
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: eureka
+spec:
+  selector:
+    matchLabels:
+      app: eureka
+  serviceName: "eureka"
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: eureka
+    spec:
+      containers:
+      - name: eureka
+        image: tharuny123/serviceregistry
+        ports:
+        - containerPort: 8761
+
+---
+# for accessing this pod from the inside the k8s cluster
+# headless service
+apiVersion: v1
+kind: Service
+metadata:
+  name: eureka
+spec:
+  clusterIP: None # line that makes the service headless 
+  selector:
+    app: eureka
+  ports:
+  - port: 8761
+    name: eureka
+
+---
+# for accessing this pod from the outside of k8s cluster
+# load balancer service
+apiVersion: v1
+kind: Service
+metadata:
+  name: eureka-lb
+spec:
+  type: NodePort # keyline
+  selector:
+    app: eureka
+  ports:
+  - port: 80 # port at which it should run
+    targetPort: 8761 # port to which it redirect
